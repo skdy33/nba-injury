@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup as BS
+import json # stats.nba 에서 network 에 오가는 json 훔쳐오기.
 
 
 class crawler_nba : 
@@ -42,6 +43,30 @@ class crawler_nba :
 			idx+=25
 
 		return DB
+
+	def player_BIOS(self,fr,to): #regular season 임을 명심해라.
+		
+		DB = pd.DataFrame() # 빈 DB 만들기.
+
+		for i in range(0,int(to)-int(fr)+1):
+			base_url1 = "http://stats.nba.com/stats/leaguedashplayerbiostats?College=&Conference=&Country=&DateFrom=&DateTo=&Division=&DraftPick=&DraftYear=&GameScope=&GameSegment=&Height=&LastNGames=0&LeagueID=00&Location=&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PerMode=PerGame&Period=0&PlayerExperience=&PlayerPosition=&Season="
+			season = fr + '-' + str(int(fr[2:4])+1) # yyyy-yy 형태.
+			base_url2 = "&SeasonSegment=&SeasonType=Regular+Season&ShotClockRange=&StarterBench=&TeamID=0&VsConference=&VsDivision=&Weight="
+			data = json.loads(requests.get(base_url1 + season + base_url2).text)
+			
+			#저장할 dataset
+			tmp = pd.DataFrame(data['resultSets'][0]['rowSet'],columns = data['resultSets'][0]['headers'])
+			tmp['season']=season
+			DB = DB.append(tmp)
+
+			print(fr)
+			fr = str(int(fr)+1)
+
+			
+
+		return DB
+
+
 
 
 
