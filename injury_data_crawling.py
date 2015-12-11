@@ -8,7 +8,7 @@ class crawler_nba :
 	def injury_from_to(self,fr,to):
 		base_url = "http://www.prosportstransactions.com/basketball/Search/SearchResults.php?Player=&Team=&BeginDate="
 		start_url = "&EndDate="
-		end_url = "&ILChkBx=yes&Submit=Search&start"
+		end_url = "&ILChkBx=yes&Submit=Search&start="
 		idx = 0 # 이건 페이지가 넘어가면서 25를 더해야해
 
 		#먼저 페이지가 몇개가 있는지 알 필요가 있어 totalp
