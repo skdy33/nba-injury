@@ -44,3 +44,10 @@ for ply in range(len(DB)):
     DB.ix[ply,'injury_period'] = minimum
     print(DB.ix[ply,'Relinquished'],DB.ix[ply,'injury_period'])
         
+
+#generating season_out data
+data = pd.read_csv('injury_before_cluster.csv')
+data = data[data['Relinquished'].apply(lambda x : x!= ' ')]
+season_out = data[data['Notes'].apply(lambda x : 'out for season' in x)]
+season_out[season_out['injury_period'].apply(lambda x : x==-1)]
+season_out.to_csv('season_out.csv',encoding='euc-kr',index=None)
