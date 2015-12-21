@@ -3,7 +3,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup as BS
 import json # stats.nba 에서 network 에 오가는 json 훔쳐오기.
-
+import datetime
 
 class crawler_nba : 
 	def injury_from_to(self,fr,to):
@@ -13,7 +13,7 @@ class crawler_nba :
 		idx = 0 # 이건 페이지가 넘어가면서 25를 더해야해
 
 		#먼저 페이지가 몇개가 있는지 알 필요가 있어 totalp
-		url = base_url+fr+start_url+to+end_url+str(idx)
+		url = base_url+fr+start_url+to+end_url+str(idx) 
 		bs = BS(requests.get(url).text,'html.parser')
 		totalp = len(bs.select('[class~=bodyCopy]')[2].select('a'))+1
 
@@ -65,8 +65,50 @@ class crawler_nba :
 			
 
 		return DB
+		
+	def player_sortable_stat(self):
+		#여기서 season start end csv 를 불러오고, default 롤 2010부터 시작하게 짜놨어.
+		season = pd.read_csv('season_start_end.csv',encoding='euc-kr')
+		season['regular season start'] = pd.to_datetime(season['regular season start'])
+		season['regular season end'] = pd.to_datetime(season['regular season end'])
+		#2015년 12월 1일이 마지막으로 잡아놨어.
+		season.ix[0,2] = datetime.date(2015,12,1)
+		#일단 2010-11 시즌부터
+		season = season.ix[0:5,:]
+		#define url
+		base_url = "http://stats.nba.com/stats/leaguedashplayerstats?College=&Conference=&Country=&DateFrom="
+		url2 = '&DateTo='
+		url3 = '&Division=&DraftPick=&DraftYear=&GameScope=&GameSegment=&Height=&LastNGames=0&LeagueID=00&Location=&MeasureType=Base&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PaceAdjust=N&PerMode=PerGame&Period=0&PlayerExperience=&PlayerPosition=&PlusMinus=N&Rank=N&Season='
+		url4 = "&SeasonSegment=&SeasonType=Regular+Season&ShotClockRange=&StarterBench=&TeamID=0&VsConference=&VsDivision=&Weight="
 
+		#DB
+		DB = pd.DataFrame()
 
+		#adder
+		add = datetime.timedelta(days = 1)
+
+		for i in range(len(season)):
+		    regular_season = season.ix[i,1]
+		    
+		    while 1 : 
+
+		        #search date
+		        date = str(regular_season.month) + "%2F" + str(regular_season.day) + "%2F" + str(regular_season.year)
+		        url = base_url + date + url2 + date + url3 + season.ix[i,0] + url4
+		        rq = requests.get(url).text
+		        tmp = pd.DataFrame(json.loads(rq)['resultSets'][0]['rowSet'],columns = json.loads(rq)['resultSets'][0]['headers'])
+		        tmp['season'] = season.ix[i,'season']
+		        tmp['date'] = regular_season
+
+		        DB = DB.append(tmp,ignore_index=True)
+		        regular_season += add
+
+		        print(regular_season.year,regular_season.month,regular_season.day)
+
+		        if regular_season == season.ix[i,'regular season end']:
+		            break
+
+		return DB
 
 
 
