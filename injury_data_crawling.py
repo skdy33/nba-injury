@@ -109,6 +109,24 @@ class crawler_nba :
 		            break
 
 		return DB
+	def player_tracking_data(self): # 2014-15 season 만을 가져온다.
+		title=["CatchShoot","Defense",'Drives','Passing','Possessions','PullUpShot','Rebounding','Efficiency','SpeedDistance','ElbowTouch','PostTouch','PaintTouch']
+		DB=pd.DataFrame()
+		DB.insert(0,'season','2014-15')
 
+		for i in range(0,len(title)):
+		    base_url1="http://stats.nba.com/stats/leaguedashptstats?College=&Conference=&Country=&DateFrom=&DateTo=&Division=&DraftPick=&DraftYear=&GameScope=&Height=&LastNGames=0&LeagueID=00&Location=&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PerMode=PerGame&PlayerExperience=&PlayerOrTeam=Player&PlayerPosition=&PtMeasureType="
+		    measure_type=title[i]
+		    base_url2="&Season=2014-15&SeasonSegment=&SeasonType=Regular+Season&StarterBench=&TeamID=0&VsConference=&VsDivision=&Weight="
+		    url=base_url1+measure_type+base_url2
+		    data = json.loads(requests.get(url).text)
+		    tmp = pd.DataFrame(data['resultSets'][0]['rowSet'],columns = data['resultSets'][0]['headers'])
+		    if i == 0 :
+		        DB=DB.append(tmp)
+		    else :
+		        DB=pd.merge(DB,tmp,how='inner')
+		    print (i)
+
+		return DB
 
 
