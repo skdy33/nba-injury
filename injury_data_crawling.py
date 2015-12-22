@@ -111,32 +111,50 @@ class crawler_nba :
 					break
 
 		return DB
-	def player_tracking_data(self): # 2014-15 season 만을 가져온다.
+	def player_tracking_data(self,fr,to): 
+		it_num = int(to)-int(fr)+1 # fr의 경우 iteration하면서 값이 변화한다. 따라서 write 할때를 위해서 iteration 숫자를 남겨둔다.
 		title=["CatchShoot","Defense",'Drives','Passing','Possessions','PullUpShot','Rebounding','Efficiency','SpeedDistance','ElbowTouch','PostTouch','PaintTouch']
-		DB=pd.DataFrame()
 		
+		for it in range(0,int(to)-int(fr)+1):
+			vars()['DB'+str(it)]=pd.DataFrame()
 
-		for i in range(0,len(title)):
-			base_url1="http://stats.nba.com/stats/leaguedashptstats?College=&Conference=&Country=&DateFrom=&DateTo=&Division=&DraftPick=&DraftYear=&GameScope=&Height=&LastNGames=0&LeagueID=00&Location=&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PerMode=PerGame&PlayerExperience=&PlayerOrTeam=Player&PlayerPosition=&PtMeasureType="
-			measure_type=title[i]
-			base_url2="&Season=2014-15&SeasonSegment=&SeasonType=Regular+Season&StarterBench=&TeamID=0&VsConference=&VsDivision=&Weight="
-			url=base_url1+measure_type+base_url2
-			data = json.loads(requests.get(url).text)
-			tmp = pd.DataFrame(data['resultSets'][0]['rowSet'],columns = data['resultSets'][0]['headers'])
+			for i in range(0,len(title)):
+				base_url1="http://stats.nba.com/stats/leaguedashptstats?College=&Conference=&Country=&DateFrom=&DateTo=&Division=&DraftPick=&DraftYear=&GameScope=&Height=&LastNGames=0&LeagueID=00&Location=&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PerMode=PerGame&PlayerExperience=&PlayerOrTeam=Player&PlayerPosition=&PtMeasureType="
+				measure_type=title[i]
+				base_url2="&Season="
+				to = str(int(fr[2:4])+1)[0:2]
+				if len(to)==1:
+					to ='0'+to
+				season = fr + '-' + to # yyyy-yy 형태.
 
-			#SpeedDistance 때문에 MIN 을 int 화 해줘야 한다.
-			if title[i] == 'SpeedDistance':
-				tmp = tmp.drop('MIN',1)
-				tmp = tmp.drop('MIN1',1)
-				DB = pd.merge(DB,tmp,how='left',on=['PLAYER_ID','TEAM_ABBREVIATION','PLAYER_NAME','TEAM_ID','GP','W','L'])
-				print(title[i])
-				continue
-			if i == 0 :
-				DB=DB.append(tmp)
-				DB.insert(0,'season','2014-15')
-			else :
-				DB=pd.merge(DB,tmp,how='left')
-			print (title[i])
+				base_url3 = "&SeasonSegment=&SeasonType=Regular+Season&StarterBench=&TeamID=0&VsConference=&VsDivision=&Weight="
+				url=base_url1+measure_type+base_url2+season+base_url3
+				data = json.loads(requests.get(url).text)
+				tmp = pd.DataFrame(data['resultSets'][0]['rowSet'],columns = data['resultSets'][0]['headers'])
+
+				#SpeedDistance 때문에 MIN 을 int 화 해줘야 한다.
+				if title[i] == 'SpeedDistance':
+					tmp = tmp.drop('MIN',1)
+					tmp = tmp.drop('MIN1',1)
+					vars()['DB'+str(it)] = pd.merge(vars()['DB'+str(it)],tmp,how='left',on=['PLAYER_ID','TEAM_ABBREVIATION','PLAYER_NAME','TEAM_ID','GP','W','L'])
+					print(title[i])
+					continue
+				if i == 0 :
+					vars()['DB'+str(it)]=(vars()['DB'+str(it)]).append(tmp)
+					vars()['DB'+str(it)].insert(0,'season',season)
+				else :
+					vars()['DB'+str(it)]=pd.merge(vars()['DB'+str(it)],tmp,how='left')
+				print (title[i])
+			fr = str(int(fr)+1)
+			
+		#concat DBs 
+
+		frame = []
+		print('DBs : ',it_num)
+		for it in range(0,it_num):
+			frame.append(vars()['DB'+str(it)])
+		DB = pd.concat(frame)
+
 
 		return DB
 	def player_cumulative_GPT(self,fr,to):
