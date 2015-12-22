@@ -90,25 +90,25 @@ class crawler_nba :
 		add = datetime.timedelta(days = 1)
 
 		for i in range(len(season)):
-		    regular_season = season.ix[i,1]
-		    
-		    while 1 : 
+			regular_season = season.ix[i,1]
+			
+			while 1 : 
 
-		        #search date
-		        date = str(regular_season.month) + "%2F" + str(regular_season.day) + "%2F" + str(regular_season.year)
-		        url = base_url + date + url2 + date + url3 + season.ix[i,0] + url4
-		        rq = requests.get(url).text
-		        tmp = pd.DataFrame(json.loads(rq)['resultSets'][0]['rowSet'],columns = json.loads(rq)['resultSets'][0]['headers'])
-		        tmp['season'] = season.ix[i,'season']
-		        tmp['date'] = regular_season
+				#search date
+				date = str(regular_season.month) + "%2F" + str(regular_season.day) + "%2F" + str(regular_season.year)
+				url = base_url + date + url2 + date + url3 + season.ix[i,0] + url4
+				rq = requests.get(url).text
+				tmp = pd.DataFrame(json.loads(rq)['resultSets'][0]['rowSet'],columns = json.loads(rq)['resultSets'][0]['headers'])
+				tmp['season'] = season.ix[i,'season']
+				tmp['date'] = regular_season
 
-		        DB = DB.append(tmp,ignore_index=True)
-		        regular_season += add
+				DB = DB.append(tmp,ignore_index=True)
+				regular_season += add
 
-		        print(regular_season.year,regular_season.month,regular_season.day)
+				print(regular_season.year,regular_season.month,regular_season.day)
 
-		        if regular_season == season.ix[i,'regular season end']:
-		            break
+				if regular_season == season.ix[i,'regular season end']:
+					break
 
 		return DB
 	def player_tracking_data(self): # 2014-15 season 만을 가져온다.
@@ -117,18 +117,26 @@ class crawler_nba :
 		
 
 		for i in range(0,len(title)):
-		    base_url1="http://stats.nba.com/stats/leaguedashptstats?College=&Conference=&Country=&DateFrom=&DateTo=&Division=&DraftPick=&DraftYear=&GameScope=&Height=&LastNGames=0&LeagueID=00&Location=&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PerMode=PerGame&PlayerExperience=&PlayerOrTeam=Player&PlayerPosition=&PtMeasureType="
-		    measure_type=title[i]
-		    base_url2="&Season=2014-15&SeasonSegment=&SeasonType=Regular+Season&StarterBench=&TeamID=0&VsConference=&VsDivision=&Weight="
-		    url=base_url1+measure_type+base_url2
-		    data = json.loads(requests.get(url).text)
-		    tmp = pd.DataFrame(data['resultSets'][0]['rowSet'],columns = data['resultSets'][0]['headers'])
-		    if i == 0 :
-		        DB=DB.append(tmp)
-		        DB.insert(0,'season','2014-15')
-		    else :
-		        DB=pd.merge(DB,tmp,how='left')
-		    print (title[i])
+			base_url1="http://stats.nba.com/stats/leaguedashptstats?College=&Conference=&Country=&DateFrom=&DateTo=&Division=&DraftPick=&DraftYear=&GameScope=&Height=&LastNGames=0&LeagueID=00&Location=&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PerMode=PerGame&PlayerExperience=&PlayerOrTeam=Player&PlayerPosition=&PtMeasureType="
+			measure_type=title[i]
+			base_url2="&Season=2014-15&SeasonSegment=&SeasonType=Regular+Season&StarterBench=&TeamID=0&VsConference=&VsDivision=&Weight="
+			url=base_url1+measure_type+base_url2
+			data = json.loads(requests.get(url).text)
+			tmp = pd.DataFrame(data['resultSets'][0]['rowSet'],columns = data['resultSets'][0]['headers'])
+
+			#SpeedDistance 때문에 MIN 을 int 화 해줘야 한다.
+			if title[i] == 'SpeedDistance':
+				tmp = tmp.drop('MIN',1)
+				tmp = tmp.drop('MIN1',1)
+				DB = pd.merge(DB,tmp,how='left',on=['PLAYER_ID','TEAM_ABBREVIATION','PLAYER_NAME','TEAM_ID','GP','W','L'])
+				print(title[i])
+				continue
+			if i == 0 :
+				DB=DB.append(tmp)
+				DB.insert(0,'season','2014-15')
+			else :
+				DB=pd.merge(DB,tmp,how='left')
+			print (title[i])
 
 		return DB
 	def player_cumulative_GPT(self,fr,to):
