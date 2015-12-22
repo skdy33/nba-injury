@@ -73,8 +73,10 @@ class crawler_nba :
 		season['regular season end'] = pd.to_datetime(season['regular season end'])
 		#2015년 12월 1일이 마지막으로 잡아놨어.
 		season.ix[0,2] = datetime.date(2015,12,1)
+		#14-15 season만
 		#일단 2010-11 시즌부터
-		season = season.ix[0:5,:]
+		#season = season.ix[0:5,:]
+		
 		#define url
 		base_url = "http://stats.nba.com/stats/leaguedashplayerstats?College=&Conference=&Country=&DateFrom="
 		url2 = '&DateTo='
@@ -125,9 +127,36 @@ class crawler_nba :
 		        DB=DB.append(tmp)
 		        DB.insert(0,'season','2014-15')
 		    else :
-		        DB=pd.merge(DB,tmp,how='outer')
-		    print (i)
+		        DB=pd.merge(DB,tmp,how='left')
+		    print (title[i])
 
 		return DB
+	def player_cumulative_GPT(self,fr,to):
+
+		DB = pd.DataFrame() # 빈 DB 만들기.
+
+		for i in range(0,int(to)-int(fr)+1):
+			base_url1 = "http://stats.nba.com/stats/leaguedashplayerstats?College=&Conference=&Country=&DateFrom=&DateTo=&Division=&DraftPick=&DraftYear=&GameScope=&GameSegment=&Height=&LastNGames=0&LeagueID=00&Location=&MeasureType=Base&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PaceAdjust=N&PerMode=PerGame&Period=0&PlayerExperience=&PlayerPosition=&PlusMinus=N&Rank=N&Season="
+			to = str(int(fr[2:4])+1)[0:2]
+			if len(to)==1:
+				to ='0'+to
+			season = fr + '-' + to # yyyy-yy 형태.
+			base_url2 = "&SeasonSegment=&SeasonType=Regular+Season&ShotClockRange=&StarterBench=&TeamID=0&VsConference=&VsDivision=&Weight="
+			data = json.loads(requests.get(base_url1 + season + base_url2).text)
+			
+			#저장할 dataset
+			tmp = pd.DataFrame(data['resultSets'][0]['rowSet'],columns = data['resultSets'][0]['headers'])
+			tmp['season']=season
+			DB = DB.append(tmp)
+
+			print(fr)
+			print(base_url1 + season + base_url2)
+			fr = str(int(fr)+1)
+
+			
+
+		return DB
+
+
 
 
