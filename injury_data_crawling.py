@@ -125,7 +125,7 @@ class crawler_nba :
 		        DB=DB.append(tmp)
 		        DB.insert(0,'season','2014-15')
 		    else :
-		        DB=pd.merge(DB,tmp,how='inner')
+		        DB=pd.merge(DB,tmp,how='outer')
 		    print (i)
 
 		return DB
