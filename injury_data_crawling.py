@@ -183,6 +183,28 @@ class crawler_nba :
 
 		return DB
 
+	def add_position_in_bios(self,DB):
+		url1= "http://stats.nba.com/stats/commonplayerinfo?LeagueID=00&PlayerID="
+		url2 = "&SeasonType=Regular+Season"
+		DB['position'] = 0
+		for i in range(0,len(DB)):
+			ID = DB.ix[i,'PLAYER_ID']
+			url = url1 + str(ID) + url2
+			data = json.loads(requests.get(url).text)
+			DB.ix[i,'position']=pd.DataFrame(data['resultSets'][0]['rowSet'],columns = data['resultSets'][0]['headers'])['POSITION'][0]
+			print (DB.ix[i,'PLAYER_NAME'])
+		return DB
 
+	def add_birthdate_in_bios(self,DB):
+		url1= "http://stats.nba.com/stats/commonplayerinfo?LeagueID=00&PlayerID="
+		url2 = "&SeasonType=Regular+Season"
+		DB['BIRTHDATE'] = 0
+		for i in range(0,len(DB)):
+			ID = DB.ix[i,'PLAYER_ID']
+			url = url1 + str(ID) + url2
+			data = json.loads(requests.get(url).text)
+			DB.ix[i,'BIRTHDATE']=pd.DataFrame(data['resultSets'][0]['rowSet'],columns = data['resultSets'][0]['headers'])['BIRTHDATE'][0]
+			print (DB.ix[i,'PLAYER_NAME'])
+		return DB
 
 
