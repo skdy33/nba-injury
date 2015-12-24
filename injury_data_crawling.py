@@ -16,7 +16,7 @@ class crawler_nba :
 		url = base_url+fr+start_url+to+end_url+str(idx) 
 		bs = BS(requests.get(url).text,'html.parser')
 		totalp = len(bs.select('[class~=bodyCopy]')[2].select('a'))+1
-
+		print(totalp)
 		#pandas에 작성할 헤더 header
 		header = ['Date','Team','Acquired','Relinquished','Notes']
 
